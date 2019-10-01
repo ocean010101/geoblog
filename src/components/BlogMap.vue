@@ -1,14 +1,10 @@
 <template>
-  <div class="blog-map">
-    <googlemaps-map
-      ref="map"
-      :center="center"
-      :zoom="zoom"
-      :options="mapOptions"
-      @update:center="setCenter"
-      @update:zoom="setZoom">
-    </googlemaps-map>
-  </div>
+    <div class="blog-map">
+        <googlemaps-map ref="map" :center="center" :zoom="zoom" :options="mapOptions" @update:center="setCenter"
+            @update:zoom="setZoom">
+            <googlemaps-user-position @update:position="setUserPosition" />
+        </googlemaps-map>
+    </div>
 </template>
 
 <script>

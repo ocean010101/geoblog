@@ -21,6 +21,9 @@
 import { mapGetters, mapActions } from 'vuex'
 export default {
     computed: mapGetters(['user', 'userPicture']),
-    methods: mapActions(['centerOnUser', 'logout']),
+    methods: mapActions({
+        centerOnUser: 'maps/centerOnUser', 
+        logout: 'logout'
+    }),
 }
 </script>
