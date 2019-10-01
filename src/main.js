@@ -13,7 +13,8 @@ Vue.use(VueFetch, {
   baseUrl: 'http://localhost:3000/'
 });
 
-function main() {
+async function main() {
+  await store.dispatch('init');
   new Vue({
     el: '#app',
     router,
@@ -21,5 +22,4 @@ function main() {
     render: h => h(App)
   })
 }
-
 main()
