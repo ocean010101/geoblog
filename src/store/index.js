@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import maps from './maps'
+import posts from './posts'
 
 Vue.use(Vuex);
 
@@ -67,7 +68,8 @@ const store = new Vuex.Store({
         },
     },
     modules: {
-        maps
+        maps,
+        posts
     }
 });
 
