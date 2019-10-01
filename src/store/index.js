@@ -14,6 +14,10 @@ const store = new Vuex.Store({
         user: (state, user) => {//更新state中用户
             state.user = user;
         }
+    },
+    getters: {
+        user: state => state.user,
+        userPicture: () => null,
     }
 });
 
