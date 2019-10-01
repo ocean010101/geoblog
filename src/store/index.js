@@ -4,13 +4,14 @@ import Vuex from 'vuex'
 Vue.use(Vuex);
 
 const store = new Vuex.Store({
+    strict: true,
     state() {
         return {
             user: null
         }
     },
     mutations: {
-        user: (state, user) => {
+        user: (state, user) => {//更新state中用户
             state.user = user;
         }
     }
