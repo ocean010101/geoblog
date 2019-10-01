@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import maps from './maps'
 
 Vue.use(Vuex);
 
@@ -20,12 +21,12 @@ const store = new Vuex.Store({
         userPicture: (state, getters) => {
             const user = getters.user
             if (user) {
-              const photos = user.profile.photos
-              if (photos.length !== 0) {
-                return photos[0].value
-              }
+                const photos = user.profile.photos
+                if (photos.length !== 0) {
+                    return photos[0].value
+                }
             }
-          },
+        },
     },
     actions: {
         async init({ dispatch }) {
@@ -64,6 +65,9 @@ const store = new Vuex.Store({
                 })
             }
         },
+    },
+    modules: {
+        maps
     }
 });
 
