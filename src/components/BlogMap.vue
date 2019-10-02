@@ -1,8 +1,14 @@
 <template>
     <div class="blog-map">
         <googlemaps-map ref="map" :center="center" :zoom="zoom" :options="mapOptions" @update:center="setCenter"
-            @update:zoom="setZoom" @click="onMapClick">
+            @update:zoom="setZoom" @click="onMapClick" @idle="onIdle">
             <googlemaps-user-position @update:position="setUserPosition" />
+            <googlemaps-marker v-for="post of posts" :key="post._id" :label="{
+          color: post === currentPost ? 'white' : 'black',
+          fontFamily: 'Material Icons',
+          fontSize: '20px',
+          text: 'face',
+        }" :position="post.position" :z-index="5" @click="selectPost(post._id)" />
             <googlemaps-marker v-if="draft" :clickable="false" :label="{
           color: 'white',
           fontFamily: 'Material Icons',
@@ -47,7 +53,9 @@ export default {
         ...postsActions([
             'setDraftLocation',
         ]),
-
+        onIdle () {
+            this.setBounds(this.$refs.map.getBounds())
+        },
         onMapClick(event) {
             this.setDraftLocation({
                 position: event.latLng,

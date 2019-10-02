@@ -1,4 +1,5 @@
 import { $fetch } from '../plugins/fetch'
+let fetchPostsUid = 0
 
 export default {
     namespaced: true,
@@ -80,6 +81,30 @@ export default {
             commit('addPost', result)
             dispatch('selectPost', result._id)
         },
+        async fetchPosts({ commit, state }, { mapBounds, force }) {
+            let oldBounds = state.mapBounds
+            if (force || !oldBounds || !oldBounds.equals(mapBounds)) {
+                const requestId = ++fetchPostsUid
+
+                // Request
+                const ne = mapBounds.getNorthEast()
+                const sw = mapBounds.getSouthWest()
+                const query = `posts?ne=${
+                    encodeURIComponent(ne.toUrlValue())
+                    }&sw=${
+                    encodeURIComponent(sw.toUrlValue())
+                    }`
+                const posts = await $fetch(query)
+
+                // We abort if we started another query
+                if (requestId === fetchPostsUid) {
+                    commit('posts', {
+                        posts,
+                        mapBounds,
+                    })
+                }
+            }
+        },
         //新建的博客会被自动选中
         async selectPost({ commit, getters }, id) {
             commit('selectedPostId', id)
@@ -97,6 +122,29 @@ export default {
 
         updateDraft({ dispatch, commit, getters }, draft) {
             commit('updateDraft', draft)
+        },
+        'logged-in': {
+            handler({ dispatch, state }) {
+                if (state.mapBounds) {
+                    dispatch('fetchPosts', {
+                        mapBounds: state.mapBounds,
+                        force: true,
+                    })
+                }
+                if (state.selectedPostId) {
+                    dispatch('selectPost', state.selectedPostId)
+                }
+            },
+            root: true,
+        },
+        logout: {
+            handler({ commit }) {
+                commit('posts', {
+                    posts: [],
+                    mapBounds: null,
+                })
+            },
+            root: true,
         },
     },
 }

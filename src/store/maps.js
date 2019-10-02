@@ -46,5 +46,15 @@ export default {
                 dispatch('centerOnUser')
             }
         },
+
+        setBounds({ dispatch }, value) {
+            console.log('updateBounds')
+            dispatch('posts/fetchPosts', {
+                mapBounds: value,
+            }, {
+                root: true,
+            })
+        },
+
     },
 }
