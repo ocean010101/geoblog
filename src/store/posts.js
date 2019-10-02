@@ -1,4 +1,5 @@
 import { $fetch } from '../plugins/fetch'
+
 let fetchPostsUid = 0
 
 export default {
@@ -6,15 +7,16 @@ export default {
 
     state() {
         return {
-            draft: null, //博客草稿
-            // 上一次请求的地图范围
-            // 防止重复请求
+            // New post being created
+            draft: null,
+            // Bounds of the last fetching
+            // To prevent refetching
             mapBounds: null,
-            // 当前地图范围内的博客
+            // Posts fetched in those map bounds
             posts: [],
-            // 当前选中的博客ID
+            // ID of the selected post
             selectedPostId: null,
-            // 获取选中的博客的详情
+            // Fetched details for the selected post
             selectedPostDetails: null,
         }
     },
@@ -22,10 +24,10 @@ export default {
     getters: {
         draft: state => state.draft,
         posts: state => state.posts,
-        //博客的id字段为'_id' 在mongoDB中
+        // The id field on posts is '_id' (MongoDB style)
         selectedPost: state => state.posts.find(p => p._id === state.selectedPostId),
         selectedPostDetails: state => state.selectedPostDetails,
-        //草稿优先于当前选中的博客
+        // The draft has more priority than the selected post
         currentPost: (state, getters) => state.draft || getters.selectedPost,
     },
 
@@ -34,8 +36,21 @@ export default {
             state.posts.push(value)
         },
 
+        addComment(state, { post, comment }) {
+            post.comments.push(comment)
+        },
+
         draft(state, value) {
             state.draft = value
+        },
+
+        likePost(state, { post, userId }) {
+            const index = post.likes.indexOf(userId)
+            if (index !== -1) {
+                post.likes.splice(index, 1)
+            } else {
+                post.likes.push(userId)
+            }
         },
 
         posts(state, { posts, mapBounds }) {
@@ -46,13 +61,16 @@ export default {
         selectedPostId(state, value) {
             state.selectedPostId = value
         },
+
         selectedPostDetails(state, value) {
             state.selectedPostDetails = value
         },
+
         updateDraft(state, value) {
             Object.assign(state.draft, value)
         },
     },
+
     actions: {
         clearDraft({ commit }) {
             commit('draft', null)
@@ -71,21 +89,22 @@ export default {
         async createPost({ commit, dispatch }, draft) {
             const data = {
                 ...draft,
-                // 需要获取表单对象
+                // We need to get the object form
                 position: draft.position.toJSON(),
             }
 
-            // 发送请求
+            // Request
             const result = await $fetch('posts/new', {
                 method: 'POST',
                 body: JSON.stringify(data),
             })
             dispatch('clearDraft')
 
-            // 更新博客列表
+            // Update the posts list
             commit('addPost', result)
             dispatch('selectPost', result._id)
         },
+
         async fetchPosts({ commit, state }, { mapBounds, force }) {
             let oldBounds = state.mapBounds
             if (force || !oldBounds || !oldBounds.equals(mapBounds)) {
@@ -110,27 +129,18 @@ export default {
                 }
             }
         },
-        //新建的博客会被自动选中
-        async selectPost({ commit, getters }, id) {
-            commit('selectedPostDetails', null)
-            commit('selectedPostId', id)
-            const details = await $fetch(`posts/${id}`)
-            commit('selectedPostDetails', details)
-        },
-        //点击地图时调用
-        setDraftLocation({ dispatch, getters }, { position, placeId }) {
-            if (!getters.draft) {// 如果没有旧创建
-                dispatch('createDraft')
-            }
-            dispatch('updateDraft', { // 更新draft地点信息
-                position,
-                placeId,
+
+        async likePost({ commit, rootGetters }, post) {
+            const userId = rootGetters.user._id
+            commit('likePost', {
+                post,
+                userId,
+            })
+            await $fetch(`posts/${post._id}/like`, {
+                method: 'POST',
             })
         },
 
-        updateDraft({ dispatch, commit, getters }, draft) {
-            commit('updateDraft', draft)
-        },
         'logged-in': {
             handler({ dispatch, state }) {
                 if (state.mapBounds) {
@@ -145,6 +155,7 @@ export default {
             },
             root: true,
         },
+
         logout: {
             handler({ commit }) {
                 commit('posts', {
@@ -154,8 +165,48 @@ export default {
             },
             root: true,
         },
+
+        async selectPost({ commit, getters }, id) {
+            commit('selectedPostDetails', null)
+            commit('selectedPostId', id)
+            const details = await $fetch(`posts/${id}`)
+            commit('selectedPostDetails', details)
+        },
+
+        async sendComment({ commit, rootGetters }, { post, comment }) {
+            const user = rootGetters.user
+            commit('addComment', {
+                post,
+                comment: {
+                    ...comment,
+                    date: new Date(),
+                    user_id: user._id,
+                    author: user,
+                },
+            })
+
+            await $fetch(`posts/${post._id}/comment`, {
+                method: 'POST',
+                body: JSON.stringify(comment),
+            })
+        },
+
+        setDraftLocation({ dispatch, getters }, { position, placeId }) {
+            if (!getters.draft) {
+                dispatch('createDraft')
+            }
+            dispatch('updateDraft', {
+                position,
+                placeId,
+            })
+        },
+
         unselectPost({ commit }) {
             commit('selectedPostId', null)
+        },
+
+        updateDraft({ dispatch, commit, getters }, draft) {
+            commit('updateDraft', draft)
         },
     },
 }
