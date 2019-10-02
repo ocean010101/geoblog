@@ -14,6 +14,8 @@ export default {
             posts: [],
             // 当前选中的博客ID
             selectedPostId: null,
+            // 获取选中的博客的详情
+            selectedPostDetails: null,
         }
     },
 
@@ -22,6 +24,7 @@ export default {
         posts: state => state.posts,
         //博客的id字段为'_id' 在mongoDB中
         selectedPost: state => state.posts.find(p => p._id === state.selectedPostId),
+        selectedPostDetails: state => state.selectedPostDetails,
         //草稿优先于当前选中的博客
         currentPost: (state, getters) => state.draft || getters.selectedPost,
     },
@@ -43,7 +46,9 @@ export default {
         selectedPostId(state, value) {
             state.selectedPostId = value
         },
-
+        selectedPostDetails(state, value) {
+            state.selectedPostDetails = value
+        },
         updateDraft(state, value) {
             Object.assign(state.draft, value)
         },
@@ -107,7 +112,10 @@ export default {
         },
         //新建的博客会被自动选中
         async selectPost({ commit, getters }, id) {
+            commit('selectedPostDetails', null)
             commit('selectedPostId', id)
+            const details = await $fetch(`posts/${id}`)
+            commit('selectedPostDetails', details)
         },
         //点击地图时调用
         setDraftLocation({ dispatch, getters }, { position, placeId }) {
@@ -145,6 +153,9 @@ export default {
                 })
             },
             root: true,
+        },
+        unselectPost({ commit }) {
+            commit('selectedPostId', null)
         },
     },
 }
