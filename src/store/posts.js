@@ -46,4 +46,33 @@ export default {
             Object.assign(state.draft, value)
         },
     },
+    actions: {
+        clearDraft({ commit }) {
+            commit('draft', null)
+        },
+
+        createDraft({ commit }) {
+            // Default values
+            commit('draft', {
+                title: '',
+                content: '',
+                position: null,
+                placeId: null,
+            })
+        },
+        //点击地图时调用
+        setDraftLocation({ dispatch, getters }, { position, placeId }) {
+            if (!getters.draft) {// 如果没有旧创建
+                dispatch('createDraft')
+            }
+            dispatch('updateDraft', { // 更新draft地点信息
+                position,
+                placeId,
+            })
+        },
+
+        updateDraft({ dispatch, commit, getters }, draft) {
+            commit('updateDraft', draft)
+        },
+    },
 }

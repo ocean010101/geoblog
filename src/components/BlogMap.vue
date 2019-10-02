@@ -1,8 +1,13 @@
 <template>
     <div class="blog-map">
         <googlemaps-map ref="map" :center="center" :zoom="zoom" :options="mapOptions" @update:center="setCenter"
-            @update:zoom="setZoom">
+            @update:zoom="setZoom" @click="onMapClick">
             <googlemaps-user-position @update:position="setUserPosition" />
+            <googlemaps-marker v-if="draft" :clickable="false" :label="{
+          color: 'white',
+          fontFamily: 'Material Icons',
+          text: 'add_circle',
+        }" :opacity=".75" :position="draft.position" :z-index="6" />
         </googlemaps-map>
     </div>
 </template>
@@ -10,14 +15,21 @@
 <script>
 import { createNamespacedHelpers } from 'vuex'
 const {
-    mapGetters,
-    mapActions } = createNamespacedHelpers('maps')
-
+    mapGetters: mapsGetters,
+    mapActions: mapsActions } = createNamespacedHelpers('maps')
+const {
+    mapGetters: postsGetters,
+    mapActions: postsActions } = createNamespacedHelpers('posts')
 export default {
     computed: {
-        ...mapGetters([
+        ...mapsGetters([
             'center',
             'zoom',
+        ]),
+        ...postsGetters([
+            'draft',
+            'posts',
+            'currentPost',
         ]),
         mapOptions() {
             return {
@@ -25,9 +37,23 @@ export default {
             }
         },
     },
-    methods: mapActions([
-        'setCenter', 
-        'setZoom'
-    ]),
+    methods: {
+        ...mapsActions([
+            'setCenter',
+            'setUserPosition',
+            'setZoom',
+        ]),
+
+        ...postsActions([
+            'setDraftLocation',
+        ]),
+
+        onMapClick(event) {
+            this.setDraftLocation({
+                position: event.latLng,
+                placeId: event.placeId,
+            })
+        },
+    },
 }
 </script>
