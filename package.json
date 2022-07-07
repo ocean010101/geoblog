@@ -12,7 +12,7 @@
   "dependencies": {
     "babel-polyfill": "^6.26.0",
     "babel-preset-vue": "^2.0.2",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "save": "^2.4.0",
     "save-dev": "^2.0.0",
     "stylus": "^0.54.7",
